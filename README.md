@@ -1,16 +1,71 @@
-# 绘制png
-```添加必要的宏
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
-```
-`stb_image_write`用的是C，需要另外添加`_CRT_SECURE_NO_DEPRECATE`和`_SCL_SECURE_NO_DEPRECATE`这两个宏。\
-打开项目----项目属性—配置属性----C/C++ ----预处理器----预处理定义
-（已经用cmake自动添加了）
 
-```
-# 针对 Visual Studio 目标，设置预处理宏
-target_compile_definitions(raytracing PRIVATE
-    _CRT_SECURE_NO_DEPRECATE
-    _SCL_SECURE_NO_DEPRECATE
-)
-```
+# Raytracing 项目
+
+## 项目简介
+
+该项目实现了一个简单的光线追踪算法，能够生成基于三维场景的图像，并将其输出为 PNG 格式的图像文件。项目使用了多线程来加速图像数据的处理，特别是在像素数据转换和渲染过程中。项目中包括以下几个主要模块：
+
+- **`main.cpp`**：项目的主执行文件，包含了光线追踪的逻辑和图像生成过程。
+- **`vector.hpp`**：包含了 `vec3` 类的定义，该类用于表示三维向量，主要用于存储颜色信息或光线方向等。
+- **`thread.hpp`**：定义了一个简单的线程池实现，用于管理多线程任务的执行，确保图像渲染过程中能够并行处理多个像素的计算。
+
+## 文件结构
+
+### `main.cpp`
+
+该文件是项目的主执行文件，包含了整个渲染过程的实现。主要功能包括：
+
+- 加载和初始化图像的像素数据。
+- 使用 `vec3` 类表示颜色数据。
+- 使用线程池并行处理图像的像素数据。
+- 将处理后的数据输出为 PNG 图像。
+
+主要的函数是 `convert_to_byte_array` 和 `draw`。`convert_to_byte_array` 函数将三维向量的数据转换为 `unsigned char` 类型，适合保存为图像格式。`draw` 函数则使用多线程将图像数据分成块并同时处理。
+
+### `vector.hpp`
+
+该文件包含了一个三维向量类 `vec3`，用于表示颜色或光线方向等。类 `vec3` 提供了向量的常见操作，包括加法、减法、标量乘法和除法等。
+
+主要的成员函数和运算符重载有：
+- `operator+`、`operator-`、`operator*`、`operator/` 等运算符，用于向量的数学运算。
+- `length` 和 `squared_length` 函数，用于计算向量的长度。
+- `dot` 和 `cross` 函数，分别用于计算点积和叉积。
+
+### `thread.hpp`
+
+该文件定义了一个线程池类 `ThreadPool`，用于管理并发任务。它通过 `std::queue` 和 `std::mutex` 实现线程安全的任务队列，并通过条件变量控制线程的启动和停止。
+
+- 线程池使用一个任务队列 `tasks` 来存储需要执行的任务，`submit` 函数将任务提交到队列中。
+- 每个工作线程会不断从任务队列中取任务并执行，直到所有任务完成。
+- `waitForCompletion` 函数用于阻塞当前线程，直到所有任务都执行完成。
+- `shutdown` 函数用于停止线程池并等待所有线程结束。
+
+### 使用说明
+
+#### 编译和运行
+
+1. 克隆或下载该项目。
+2. 在终端中进入项目目录，使用以下命令创建构建文件夹并编译：
+    ```bash
+    mkdir build
+    cd build
+    cmake ..
+    make
+    ```
+3. 运行生成的可执行文件：
+    ```bash
+    ./raytracing
+    ```
+4. 运行后，程序会在当前目录下生成 `output.png` 图像文件。
+
+#### 主要功能
+
+- **图像渲染**：通过光线追踪算法渲染 800x600 分辨率的图像。
+- **多线程加速**：使用线程池并行化像素数据的处理，提高渲染效率。
+- **输出结果**：最终渲染的图像将被保存为 PNG 格式。
+
+#### 编译要求
+
+- C++17 或更高版本的编译器（如 GCC、Clang、MSVC）。
+- CMake 3.10 或更高版本。
+- stb_image_write 库（用于保存 PNG 图像）。
